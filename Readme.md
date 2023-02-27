@@ -11,7 +11,6 @@ Make sure you have Python 3.3 +.
 2. Press (CMD + SHIFT + P) or (CTRL + SHIFT + P) and type clone. Click the command `Git: Clone`.
 3. Paste the clone **HTTPS** link and click **Clone from URL**. 
 4. Pick the folder you want to clone to.
-
 5. 
 On Mac, in the VS Code terminal:
 ```sh
