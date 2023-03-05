@@ -1,2 +1,3 @@
 class WebScraping:
+    #
     pass
