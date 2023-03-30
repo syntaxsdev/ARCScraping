@@ -8,6 +8,7 @@ class WebScraping:
     bs4 = None
     def __init__(self):
         self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
+        self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors"]
         bs4 = BeautifulSoup()
 
     '''
@@ -32,6 +33,9 @@ class WebScraping:
         links = [link['href'] for link in raw_links if not any(link['href'].startswith(prefix) 
                     or link['href'].find('google.com') > 0 for prefix in self.linkFilterPrefixes)] 
         
+        # Filter links that don't contain searches
+        links = [link for link in links if not any(link.find(search) > -1 for search in self.linkFilterSearches)]
+
         # Only grab the relevent part of the link if it includes more in it
         links = [link.split("/url?q=")[-1].split("&sa")[0] for link in links]
         user.initial_search_links = links
@@ -75,7 +79,7 @@ class WebScraping:
         bs = BeautifulSoup(req.content, 'html.parser')
         
         # Grab only the webtext (text without HTML tags)
-        webtext = bs.get_text()
+        webtext = bs.get_text().replace('\n', '').replace('"', '').strip()
         
         # Parse the URL so that we can only get the base domain
         parsed_url = urlparse(link)
@@ -88,6 +92,7 @@ class WebScraping:
         # <TODO>
         #NOT DONE
         print(verified, check, reason)
+        return webtext
         
     
     '''
