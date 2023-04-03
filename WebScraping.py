@@ -16,7 +16,7 @@ class WebScraping:
     and returns all the links
     '''
     def initial_search(self, user: User):
-        user_name = "+".join(user.name) + f" {user.institution}"
+        user_name = "+".join(user.research_data['name']) + f" {user.research_data['institution']}"
 
         # Tweaks should be done here, maybe make a link scraper by itself
 
@@ -49,12 +49,12 @@ class WebScraping:
     '''
     def verify_link_relevancy(self, link: str, page_data: str, user: User):
         page_data = page_data.lower()
-        user_name = "+".join(user.name).lower()
+        user_name = "+".join(user.research_data['name']).lower()
         checks = 0
         reason = ""
 
         # Check 1
-        if page_data.find(user.institution.lower()):
+        if page_data.find(user.research_data['institution'].lower()):
             checks += 1
             reason += "Instituion found | "
 
@@ -64,7 +64,7 @@ class WebScraping:
             reason += "Researcher name found | "
         
         # Check 3
-        if Universities.findUniversityLink(user.institution).find(link) > -1:
+        if Universities.findUniversityLink(user.research_data['institution']).find(link) > -1:
             checks += 1
             reason += "University website verified"
         return (checks >= 2, checks, reason)
