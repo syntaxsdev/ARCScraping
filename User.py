@@ -1,26 +1,23 @@
 class User:
-    research_data: dict = {
-        "name": "",
-        "institution": "",
-        "email": "",
-        "gender": "",
-        "department": "",
-        "domain": "",
-        "additional_websites": list(),
-        "research_focus": list(),
-        "research_fields": list(),
-        "expertise": list(),
-        "awards": list(),
-        "appointments": list()
-    }
     
     def __init__(self, name: str, institution: str):
+        self.research_data: dict = {
+            "name": "",
+            "institution": "",
+            "email": "",
+            "gender": "",
+            "department": "",
+            "domain": "",
+            "additional_websites": list(),
+            "research_focus": list(),
+            "research_fields": list(),
+            "expertise": list(),
+            "awards": list(),
+            "appointments": list()
+        }
         self.research_data['name'] = name.split(" ")
         self.research_data['institution']  = institution
         self.initial_search_links: list = []
-        '''
-        Add objects for other compiled pieces of data
-        '''
 
         def scrape_data(data: dict):
             '''
