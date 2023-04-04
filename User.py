@@ -1,7 +1,7 @@
 class User:
     
     def __init__(self, name: str, institution: str):
-        self.research_data: dict = {
+        self.research_data: dict = { 
             "name": "",
             "institution": "",
             "email": "",
