@@ -8,7 +8,8 @@ class WebScraping:
     bs4 = None
     def __init__(self):
         self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
-        self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors"]
+        self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors",
+                                   "stylus", "researchgate", "youtube"]
         bs4 = BeautifulSoup()
 
     '''
