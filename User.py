@@ -4,11 +4,11 @@ class User:
         self.research_data: dict = { 
             "name": "",
             "institution": "",
-            "email": "",
             "gender": "",
-            "department": "",
             "domain": "",
+            "emails": list(),
             "additional_websites": list(),
+            "department": list(),
             "research_focus": list(),
             "research_fields": list(),
             "expertise": list(),

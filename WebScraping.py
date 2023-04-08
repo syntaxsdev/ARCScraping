@@ -1,4 +1,5 @@
 import requests, random, Universities
+from GPT import GPT
 from urllib.parse import urlparse
 from UserAgents import UserAgents
 from User import User
@@ -9,37 +10,65 @@ class WebScraping:
     def __init__(self):
         self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
         self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors",
-                                   "stylus", "researchgate", "youtube"]
+                                   "coursicle"]
         bs4 = BeautifulSoup()
+        self.GPT = GPT()
 
     '''
     The initial search perform a google search on the user using the query "{FIRST LAST} {INSTITUTION}"
     and returns all the links
     '''
     def initial_search(self, user: User):
-        user_name = "+".join(user.research_data['name']) + f" {user.research_data['institution']}"
+        # user_name = "+".join(user.research_data['name']) + f" {user.research_data['institution']}"
 
-        # Tweaks should be done here, maybe make a link scraper by itself
+        # # Tweaks should be done here, maybe make a link scraper by itself
 
-        #search_url = f"https://www.google.com/search?q=%22{user_name}%22"
-        search_url = f"https://www.google.com/search?q={user_name}"
+        # #search_url = f"https://www.google.com/search?q=%22{user_name}%22"
+        # search_url = f"https://www.google.com/search?q={user_name}"
 
-        # End of tweaks
-        req = self.request(search_url)
-        bs = BeautifulSoup(req.content, 'html.parser')
+        # # End of tweaks
+        # req = self.request(search_url)
+        # bs = BeautifulSoup(req.content, 'html.parser')
 
-        # Select every single <a> element
-        raw_links = bs.select("a")
-        # Filter links that do not contain "google.com" or start with the prefixes defined.
-        links = [link['href'] for link in raw_links if not any(link['href'].startswith(prefix) 
-                    or link['href'].find('google.com') > 0 for prefix in self.linkFilterPrefixes)] 
+        # # Select every single <a> element
+        # raw_links = bs.select("a")
+        # # Filter links that do not contain "google.com" or start with the prefixes defined.
+        # links = [link['href'] for link in raw_links if not any(link['href'].startswith(prefix) 
+        #             or link['href'].find('google.com') > 0 for prefix in self.linkFilterPrefixes)] 
         
-        # Filter links that don't contain searches
-        links = [link for link in links if not any(link.find(search) > -1 for search in self.linkFilterSearches)]
+        # # Filter links that don't contain searches
+        # links = [link for link in links if not any(link.find(search) > -1 for search in self.linkFilterSearches)]
 
-        # Only grab the relevent part of the link if it includes more in it
-        links = [link.split("/url?q=")[-1].split("&sa")[0] for link in links]
+        # # Only grab the relevent part of the link if it includes more in it
+        # links = [link.split("/url?q=")[-1].split("&sa")[0] for link in links]
+        # user.initial_search_links = links
+        # return links
+
+
+        user_name = "+".join(user.research_data['name']) + f" {user.research_data['institution']}"
+        links = []
+
+        for page_number in range(3):
+            start_index = page_number * 10
+            search_url = f"https://www.google.com/search?q={user_name}&start={start_index}"
+
+            req = self.request(search_url)
+            bs = BeautifulSoup(req.content, 'html.parser')
+
+            # Select every single <a> element
+            raw_links = bs.select("a")
+            # Filter links that do not contain "google.com" or start with the prefixes defined.
+            filtered_links = [link['href'] for link in raw_links if not any(link['href'].startswith(prefix) 
+                        or link['href'].find('google.com') > 0 for prefix in self.linkFilterPrefixes)] 
+        
+            # Filter links that don't contain searches
+            filtered_links = [link for link in filtered_links if not any(link.find(search) > -1 for search in self.linkFilterSearches)]
+
+            # Only grab the relevent part of the link if it includes more in it
+            links += [link.split("/url?q=")[-1].split("&sa")[0] for link in filtered_links]
+
         user.initial_search_links = links
+        # links = list(set(links))
         return links
     
     '''
@@ -57,7 +86,7 @@ class WebScraping:
         # Check 1
         if page_data.find(user.research_data['institution'].lower()):
             checks += 1
-            reason += "Instituion found | "
+            reason += "Institution found | "
 
         # Check 2
         if page_data.find(user_name):
@@ -90,12 +119,21 @@ class WebScraping:
         # Do a 3 part check on the domain, webtext, and the user to verify it pertains to the user
         verified, check, reason = self.verify_link_relevancy(domain, webtext, user)
 
-        # <TODO>
-        #NOT DONE
-        print(verified, check, reason)
-        return webtext
-        
-    
+        if verified:
+            json_data = self.GPT.scrape(webtext)
+            for json in json_data:
+                for key, value in json.items():
+                    v_data = str(value)
+                    if (type(value)==list):
+                        user.research_data[key].extend(value)
+                    else:
+                        if (value == 'N/A' or value == None):
+                            continue
+                        if (type(user.research_data[key])==list):
+                            user.research_data[key].append(value)
+                        else:
+                            user.research_data[key] = value
+
     '''
     Internal request method that faciliates parameters and headers
     :return: `Response`
