@@ -134,6 +134,15 @@ class WebScraping:
                         else:
                             user.research_data[key] = value
 
+
+    '''
+    Scrape all the webpages from the user
+    and implement into their research_data field
+    '''
+    def scrape_researcher(self, user: User):
+        for page in user.initial_search_links:
+            self.scrape_webpage(page)
+
     '''
     Internal request method that faciliates parameters and headers
     :return: `Response`
