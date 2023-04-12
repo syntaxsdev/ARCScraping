@@ -1,5 +1,6 @@
 import csv
 from WebScraping import WebScraping
+from GPT import GPT
 from User import User
 
 '''
@@ -13,7 +14,7 @@ class ARCScraping:
     def __init__(self, file: str):
         # Create the WebScraping object
         self.ws: WebScraping = WebScraping()
-
+        self.GPT: GPT = GPT()
 
         with open(file, 'r') as file:
             reader = csv.reader(file)
@@ -37,12 +38,8 @@ class ARCScraping:
         # Get the initial links from the search engine search
         self.ws.initial_search(researcher)
 
-        # Scrape each webpage from the initial_search
-        for initial_search in researcher.initial_search_links:
-            self.ws.scrape_webpage(initial_search, researcher)
-
-        #<TODO> NOT DONE
-        #.....
+        # Scrape entire researcher from top-down
+        self.ws.scrape_researcher(researcher)
 
 
     '''

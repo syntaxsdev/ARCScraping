@@ -30,11 +30,14 @@ class GPT:
         msg = self.generateMessage(prompt=os.getenv("researcher_prompt") + add_prompt, text=webtext)
         msg_list = self.truncate_message_parts(msg)
 
-        print("len:" + str(len(msg_list)))
         for msg_part in msg_list:
             data = self.runModel(msg_history=msg_part)
-            print(data)
-            json_data.append(json.loads(data.choices[0].message.content))
+
+            try:
+                json_data.append(json.loads(data.choices[0].message.content))
+            except Exception as ex:
+                #Ignore appending
+                pass
         return json_data
 
         
@@ -75,19 +78,17 @@ class GPT:
 
             truncated_content = content
             while self.num_tokens_from_messages(scan) > max_tokens:
-                print(self.num_tokens_from_messages(scan))
                 offset = int(len(truncated_content) * 0.05)
                 half_size = len(truncated_content) // 2
                 truncate_at = max(half_size + offset, 1)
                 last_period = truncated_content[:truncate_at].rfind(".")
                 last_doublespace = truncated_content[:truncate_at].rfind("  ")
 
-                print(half_size + offset, last_period, last_doublespace)
                 if last_period != -1 and (half_size + offset) >= last_period:
-                    print("in lp")
+
                     truncated_content = truncated_content[:last_period + 1]
                 elif last_doublespace != 1 and (half_size + offset) >= last_doublespace:
-                    print("in lds")
+
                     truncated_content = truncated_content[:last_doublespace + 1]
                 else:
                     truncated_content = truncated_content[:truncate_at]

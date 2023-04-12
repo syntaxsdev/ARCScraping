@@ -108,7 +108,7 @@ class WebScraping:
     Scrape the webpage and get the webtext without HTML tags
     then check verify the source is reputable by a 3 part check method
     '''
-    def scrape_webpage(self, link: str, user: User, checks: int):
+    def scrape_webpage(self, link: str, user: User, checks):
         # Request the page and convert to BS4
         req = self.request(link)
         bs = BeautifulSoup(req.content, 'html.parser')
@@ -147,7 +147,7 @@ class WebScraping:
     Scrape all the webpages from the user
     and implement into their research_data field
     '''
-    def scrape_researcher(self, user: User, checks: int = 2):
+    def scrape_researcher(self, user: User, checks = 2):
         for page in user.initial_search_links:
             print("[New Scrape]")
             self.scrape_webpage(page, user, checks)
