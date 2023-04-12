@@ -21,20 +21,6 @@ class User:
         self.research_data['institution']  = institution
         self.initial_search_links: list = []
 
-    def scrape_data(data: dict):
-        '''
-        Append all scraped data to list
-        '''
-        self.research_fields.append(data['research_fields'])
-        self.research_focus.append(data['research_focus'])
-        self.expertise.append(data['expertise'])
-        if (type(data['awards']) == list):
-            for award in data['awards']:
-                self.awards.append(award)
-        else:
-            self.awards.append(data['awards'])
-
-
     '''
     This method takes all of the possible formats such as dictionaries, 
     etc and shrinks them down into a string list
