@@ -1,16 +1,18 @@
-import requests, random, Universities
+import requests, random, Universities, re
 from GPT import GPT
 from urllib.parse import urlparse
 from UserAgents import UserAgents
 from User import User
 from bs4 import BeautifulSoup
+from fuzzywuzzy import fuzz
+
 
 class WebScraping:
     bs4 = None
     def __init__(self):
         self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
         self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors",
-                                   "coursicle"]
+                                   "coursicle", "youtube"]
         bs4 = BeautifulSoup()
         self.GPT = GPT()
 
@@ -78,18 +80,19 @@ class WebScraping:
     3. Check if the URL is from their institution.
     '''
     def verify_link_relevancy(self, link: str, page_data: str, user: User):
-        page_data = page_data.lower()
-        user_name = "+".join(user.research_data['name']).lower()
-        checks = 0
-        reason = ""
+        page_data: str = page_data.lower()
+        user_name: str = " ".join(user.research_data['name']).lower()
+        checks: int  = 0
+        reason: str = ""
 
         # Check 1
-        if page_data.find(user.research_data['institution'].lower()):
+        institution: str = user.research_data['institution']
+        if page_data.find(institution.lower()) > -1:
             checks += 1
             reason += "Institution found | "
 
         # Check 2
-        if page_data.find(user_name):
+        if page_data.find(user_name) > -1 or self.is_name_in_text(user_name, page_data):
             checks += 1
             reason += "Researcher name found | "
         
@@ -97,13 +100,15 @@ class WebScraping:
         if Universities.findUniversityLink(user.research_data['institution']).find(link) > -1:
             checks += 1
             reason += "University website verified"
-        return (checks >= 2, checks, reason)
+        add_prompt: str = f"The researcher: {user_name} | Institution: {institution}"
+
+        return (checks >= 2, checks, reason, add_prompt)
         
     ''' 
     Scrape the webpage and get the webtext without HTML tags
     then check verify the source is reputable by a 3 part check method
     '''
-    def scrape_webpage(self, link: str, user: User):
+    def scrape_webpage(self, link: str, user: User, checks: int):
         # Request the page and convert to BS4
         req = self.request(link)
         bs = BeautifulSoup(req.content, 'html.parser')
@@ -117,10 +122,13 @@ class WebScraping:
         domain = '.'.join(domain_parts[-2:])
 
         # Do a 3 part check on the domain, webtext, and the user to verify it pertains to the user
-        verified, check, reason = self.verify_link_relevancy(domain, webtext, user)
+        verified, check, reason, prompt = self.verify_link_relevancy(domain, webtext, user)
 
-        if verified:
-            json_data = self.GPT.scrape(webtext)
+
+        print(webtext)
+        print("C: " + str(check >= checks) + " | V: " + str(verified))
+        if check >= checks and verified:
+            json_data = self.GPT.scrape(webtext, prompt)
             for json in json_data:
                 for key, value in json.items():
                     v_data = str(value)
@@ -139,9 +147,39 @@ class WebScraping:
     Scrape all the webpages from the user
     and implement into their research_data field
     '''
-    def scrape_researcher(self, user: User):
+    def scrape_researcher(self, user: User, checks: int = 2):
         for page in user.initial_search_links:
-            self.scrape_webpage(page)
+            print("[New Scrape]")
+            self.scrape_webpage(page, user, checks)
+
+    '''
+    Check if names are similar in case of shortened names
+    '''
+    def is_name_similar(name1, name2, threshold=60):
+        similarity = fuzz.token_set_ratio(name1, name2)
+        return similarity >= threshold
+
+
+    '''
+    Extract all names in the webtext
+    '''
+    def extract_names(self, text):
+        # A simple regex pattern for extracting names with format "FirstName LastName"
+        name_pattern = r'\b[A-Z][a-z]+\s[A-Z][a-z]+\b'
+        names = re.findall(name_pattern, text)
+        return names
+
+
+    '''
+    Check if name is in the webtext
+    '''
+    def is_name_in_text(self, name, text, threshold=80):
+        names = set(self.extract_names(text))
+        for extracted_name in names:
+            if fuzz.token_set_ratio(name, extracted_name) >= threshold:
+                return True
+        return False
+
 
     '''
     Internal request method that faciliates parameters and headers

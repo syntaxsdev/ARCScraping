@@ -24,15 +24,16 @@ class GPT:
         )
         return response
 
-    def scrape(self, webtext: str):
+    def scrape(self, webtext: str, add_prompt: str):
         self.connectOpenAI()
         json_data = []
-        msg = self.generateMessage(prompt=os.getenv("researcher_prompt"), text=webtext)
+        msg = self.generateMessage(prompt=os.getenv("researcher_prompt") + add_prompt, text=webtext)
         msg_list = self.truncate_message_parts(msg)
 
         print("len:" + str(len(msg_list)))
         for msg_part in msg_list:
             data = self.runModel(msg_history=msg_part)
+            print(data)
             json_data.append(json.loads(data.choices[0].message.content))
         return json_data
 
