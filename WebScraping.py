@@ -5,6 +5,7 @@ from UserAgents import UserAgents
 from User import User
 from bs4 import BeautifulSoup
 from fuzzywuzzy import fuzz
+import difflib
 
 
 class WebScraping:
@@ -142,6 +143,28 @@ class WebScraping:
                         else:
                             user.research_data[key] = value
 
+    '''
+    Removes similar values in the scraped
+    data and keeps only unique ones
+    '''
+    def remove_similar_values(self, input_dict, threshold=90):
+        for key, value in input_dict.items():
+            if isinstance(value, list):
+                cleaned_values = []
+                for v in value:
+                    # Check similarity between current value and previously cleaned values
+                    similarity = max([fuzz.token_sort_ratio(v, cleaned_v) for cleaned_v in cleaned_values] + [0])
+                    if similarity < threshold:
+                        cleaned_values.append(v)
+                input_dict[key] = cleaned_values
+            else:
+                if key not in input_dict:
+                    input_dict[key] = value
+                else:
+                    similarity = fuzz.token_sort_ratio(value, input_dict[key])
+                    if similarity < threshold:
+                        input_dict[key] = value
+        return input_dict
 
     '''
     Scrape all the webpages from the user
@@ -151,6 +174,7 @@ class WebScraping:
         for page in user.initial_search_links:
             print("[New Scrape]")
             self.scrape_webpage(page, user, checks)
+        self.remove_similar_values(user.research_data)
 
     '''
     Check if names are similar in case of shortened names
