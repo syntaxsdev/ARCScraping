@@ -2,6 +2,8 @@ import csv
 from WebScraping import WebScraping
 from GPT import GPT
 from User import User
+import pandas as pd
+import datetime
 
 '''
 The main class that utilizes all of the components to create a full service project
@@ -26,8 +28,9 @@ class ARCScraping:
                 self.researchers_scraped.append(user)
 
         # Export all scraped researchers
-        export_name = file.strip(".")[0] + "_exported.csv"
-        self.export(export_name)
+        #export_name = file.strip(".")[0] + "_exported.csv"
+        #self.export(export_name)
+        self.export(self.researchers_scraped)
 
 
     '''
@@ -45,8 +48,22 @@ class ARCScraping:
     '''
     Export all researchers to a .csv format
     '''
-    def export(self, export_name):
-        pass
+    def export(self, input_list):
+        df = pd.DataFrame(input_list)
+
+        '''
+        clean the data before exporting WILL DO LATER
+        '''
+
+        # create a unique filename with timestamp
+        export_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        export_filename = f"output_{export_time}.csv"
+
+        # export dataframe as .csv file
+        df.to_csv(export_filename, index=False)
+
+
+
 
 
     
