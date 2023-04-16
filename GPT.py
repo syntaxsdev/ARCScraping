@@ -25,6 +25,7 @@ class GPT:
         return response
 
     def scrape(self, webtext: str, add_prompt: str):
+        print("Scraping")
         self.connectOpenAI()
         json_data = []
         msg = self.generateMessage(prompt=os.getenv("researcher_prompt") + add_prompt, text=webtext)
@@ -35,6 +36,7 @@ class GPT:
 
             try:
                 json_data.append(json.loads(data.choices[0].message.content))
+                print(data.choices[0].message.content)
             except Exception as ex:
                 #Ignore appending
                 pass
@@ -71,7 +73,7 @@ class GPT:
 
         while content:
             scan = self.generateMessage(prompt=message[0]['content'], text=content)
-
+            print(scan)
             if self.num_tokens_from_messages(scan) <= max_tokens:
                 truncated_messages.append(scan)
                 break

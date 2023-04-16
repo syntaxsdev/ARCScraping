@@ -5,6 +5,7 @@ from UserAgents import UserAgents
 from User import User
 from bs4 import BeautifulSoup
 from fuzzywuzzy import fuzz
+from threading import Thread
 import difflib
 
 
@@ -125,9 +126,6 @@ class WebScraping:
         # Do a 3 part check on the domain, webtext, and the user to verify it pertains to the user
         verified, check, reason, prompt = self.verify_link_relevancy(domain, webtext, user)
 
-
-        print(webtext)
-        print("C: " + str(check >= checks) + " | V: " + str(verified))
         if check >= checks and verified:
             json_data = self.GPT.scrape(webtext, prompt)
             for json in json_data:
@@ -171,15 +169,24 @@ class WebScraping:
     and implement into their research_data field
     '''
     def scrape_researcher(self, user: User, checks = 2):
+        thread_list : list[Thread] = []
         for page in user.initial_search_links:
             print("[New Scrape]")
-            self.scrape_webpage(page, user, checks)
+            
+            # Start threading
+            thread = Thread(target=self.scrape_webpage, args=(page, user, checks))
+            thread_list.append(thread)
+            thread.start()
+
+        # Wait for all threads to finish
+        for thread in thread_list:
+            thread.join()
         self.remove_similar_values(user.research_data)
 
     '''
     Check if names are similar in case of shortened names
     '''
-    def is_name_similar(name1, name2, threshold=60):
+    def is_name_similar(self, name1, name2, threshold=60):
         similarity = fuzz.token_set_ratio(name1, name2)
         return similarity >= threshold
 

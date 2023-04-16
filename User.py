@@ -34,7 +34,8 @@ class User:
                 # Recursion here
                 newlist.extend(self.dedictionaryify(aw)) 
             else:
-                newlist.append(aw)
+                if aw != "N/A": 
+                    newlist.append(aw)
         return newlist
             
 
