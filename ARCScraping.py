@@ -57,7 +57,7 @@ class ARCScraping:
                 researcher.research_data["name"] = ' '.join(researcher.research_data["name"])
             else:
                 if (isinstance(researcher.research_data[key], list)):
-                    if (isinstance(researcher.research_data[key], dict)):
+                    if (isinstance(researcher.research_data[key][0], dict)):
                         list_dict = researcher.dedictionaryify(researcher.research_data[key])
                         researcher.research_data[key] = '\n'.join(list_dict)
                     else:
