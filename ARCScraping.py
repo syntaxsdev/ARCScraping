@@ -48,12 +48,20 @@ class ARCScraping:
     '''
     Export all researchers to a .csv format
     '''
-    def export(self, input_list):
+    def export(self, input_list, researcher: User):
         df = pd.DataFrame(input_list)
 
-        '''
-        clean the data before exporting WILL DO LATER
-        '''
+        # Cleans the dataframe before export
+        for key in researcher.research_data.keys():
+            if (key == "name"):
+                researcher.research_data["name"] = ' '.join(researcher.research_data["name"])
+            else:
+                if (isinstance(researcher.research_data[key], list)):
+                    if (isinstance(researcher.research_data[key], dict)):
+                        list_dict = researcher.dedictionaryify(researcher.research_data[key])
+                        researcher.research_data[key] = '\n'.join(list_dict)
+                    else:
+                        researcher.research_data[key] = '\n'.join(researcher.research_data[key])
 
         # create a unique filename with timestamp
         export_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')

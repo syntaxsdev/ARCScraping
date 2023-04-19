@@ -131,6 +131,8 @@ class WebScraping:
             for json in json_data:
                 for key, value in json.items():
                     v_data = str(value)
+                    if (key == "name"):
+                        continue
                     if (type(value)==list):
                         user.research_data[key].extend(value)
                     else:
@@ -145,7 +147,7 @@ class WebScraping:
     Removes similar values in the scraped
     data and keeps only unique ones
     '''
-    def remove_similar_values(self, input_dict, threshold=90):
+    def remove_similar_values(self, input_dict, threshold=80):
         for key, value in input_dict.items():
             if isinstance(value, list):
                 cleaned_values = []
