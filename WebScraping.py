@@ -173,7 +173,7 @@ class WebScraping:
     def scrape_researcher(self, user: User, checks = 2):
         thread_list : list[Thread] = []
         for page in user.initial_search_links:
-            print("[New Scrape]")
+            # print("[New Scrape]")
             
             # Start threading
             thread = Thread(target=self.scrape_webpage, args=(page, user, checks))

@@ -23,14 +23,12 @@ class ARCScraping:
             for researcher in reader:
                 user: User = User(researcher[0], researcher[1])
                 self.full_scrape(user)
-                
+
                 # After we full_scrape each user, now we must start to export
-                self.researchers_scraped.append(user)
+                self.researchers_scraped.append(user.research_data)
 
         # Export all scraped researchers
-        #export_name = file.strip(".")[0] + "_exported.csv"
-        #self.export(export_name)
-        self.export(self.researchers_scraped)
+        self.export()
 
 
     '''
@@ -48,24 +46,27 @@ class ARCScraping:
     '''
     Export all researchers to a .csv format
     '''
-    def export(self, input_list, researcher: User):
-        df = pd.DataFrame(input_list)
+    def export(self):
 
-        # Cleans the dataframe before export
-        for key in researcher.research_data.keys():
-            if (key == "name"):
-                researcher.research_data["name"] = ' '.join(researcher.research_data["name"])
-            else:
-                if (isinstance(researcher.research_data[key], list)):
-                    if (isinstance(researcher.research_data[key][0], dict)):
-                        list_dict = researcher.dedictionaryify(researcher.research_data[key])
-                        researcher.research_data[key] = '\n'.join(list_dict)
-                    else:
-                        researcher.research_data[key] = '\n'.join(researcher.research_data[key])
+        for researcher in self.researchers_scraped:
+            for key in researcher.keys():
+                if (key == "name"):
+                    researcher["name"] = ' '.join(researcher["name"])
+                else:
+                    if (isinstance(researcher[key], list)):
+                        if (len(researcher[key]) > 0):
+                            if(isinstance(researcher[key][0], dict)):
+                                list_dict = User.dedictionaryify(self, researcher[key])
+                                researcher[key] = '\n'.join(list_dict)
+                            else:
+                                researcher[key] = '\n'.join(researcher[key])
+                            
 
         # create a unique filename with timestamp
         export_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
         export_filename = f"output_{export_time}.csv"
+
+        df = pd.DataFrame(self.researchers_scraped)
 
         # export dataframe as .csv file
         df.to_csv(export_filename, index=False)
