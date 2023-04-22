@@ -1,9 +1,7 @@
-import csv
+import csv, datetime, pandas as pd, asyncio, threading
 from WebScraping import WebScraping
 from GPT import GPT
 from User import User
-import pandas as pd
-import datetime
 
 '''
 The main class that utilizes all of the components to create a full service project
@@ -20,35 +18,37 @@ class ARCScraping:
 
         with open(file, 'r') as file:
             reader = csv.reader(file)
+            next(reader)
             for researcher in reader:
-                user: User = User(researcher[0], researcher[1])
-                self.full_scrape(user)
-                
-                # After we full_scrape each user, now we must start to export
+                user: User = User(researcher[0], researcher[1])                  
                 self.researchers_scraped.append(user)
-
-        # Export all scraped researchers
-        #export_name = file.strip(".")[0] + "_exported.csv"
-        #self.export(export_name)
-        self.export(self.researchers_scraped)
 
 
     '''
     Top down scrape of the entire user starting from the initial search engine search
     to the NLP classifications
     '''
-    def full_scrape(self, researcher: User) -> User:
+    async def full_scrape(self, researcher: User) -> User:
+        print("Begin full scrape")
         # Get the initial links from the search engine search
         self.ws.initial_search(researcher)
-
+        print(f"Researcher [{researcher.research_data['name']}] done with initial search.")
         # Scrape entire researcher from top-down
-        self.ws.scrape_researcher(researcher)
+        await self.ws.scrape_researcher(researcher)
+        print(f"Researcher [{researcher.research_data['name']}] done with scraping..")
 
+
+    def run_async_task(self, async_fn):
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(async_fn())
+        finally:
+            loop.close()
 
     '''
     Export all researchers to a .csv format
     '''
-    def export(self, input_list, researcher: User):
+    def export2(self, input_list, researcher: User):
         df = pd.DataFrame(input_list)
 
         # Cleans the dataframe before export
@@ -70,7 +70,44 @@ class ARCScraping:
         # export dataframe as .csv file
         df.to_csv(export_filename, index=False)
 
+    '''
+    Export all researchers to a .csv format
+    '''
+    def export(self):
+        #temp_researchers = self.researchers_scraped.copy()
+        researchers_list: list = []
+        for researcher in self.researchers_scraped:
+            researcher_export_data:dict = {}
+            for key, val in researcher.research_data.items():
+                dedict: list = researcher.dedictionaryify(val)
+                dedict_to_str: str = '\n'.join(dedict)
+                    
+                researcher_export_data[key] = dedict_to_str
+            researchers_list.append(researcher_export_data)
 
+
+        df = pd.DataFrame(researchers_list)
+         # create a unique filename with timestamp
+        export_time = datetime.datetime.now().strftime('%Y-%m-%d %H-%M-%S')
+        export_filename = f"output_{export_time}.xlsx"
+
+        # export dataframe as .csv file
+        df.to_excel(export_filename, index=False, engine='openpyxl')
+
+
+    async def run(self):
+        '''
+        tasks = [
+        asyncio.to_thread(self.full_scrape, researcher)
+        for researcher in self.researchers_scraped
+        ]
+        await asyncio.gather(*tasks)
+        '''
+        for researcher in self.researchers_scraped:
+            await self.full_scrape(researcher)
+        print("Done running all researchers")
+        
+        self.export()
 
 
 

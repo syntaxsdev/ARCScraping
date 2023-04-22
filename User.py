@@ -27,6 +27,11 @@ class User:
     '''
     def dedictionaryify(self, field_data):
         newlist = []
+
+        if (type(field_data) == str):
+            newlist.append(field_data)
+            return newlist
+        
         for aw in field_data:
             if (type(aw)==dict):
                 newlist.append(' '.join(str(value) for value in aw.values()))

@@ -1,4 +1,4 @@
-import requests, random, Universities, re
+import requests, random, Universities, re, difflib, asyncio
 from GPT import GPT
 from urllib.parse import urlparse
 from UserAgents import UserAgents
@@ -6,7 +6,6 @@ from User import User
 from bs4 import BeautifulSoup
 from fuzzywuzzy import fuzz
 from threading import Thread
-import difflib
 
 
 class WebScraping:
@@ -14,7 +13,7 @@ class WebScraping:
     def __init__(self):
         self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
         self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors",
-                                   "coursicle", "youtube"]
+                                   "coursicle", "youtube", ".gov"]
         bs4 = BeautifulSoup()
         self.GPT = GPT()
 
@@ -99,7 +98,7 @@ class WebScraping:
             reason += "Researcher name found | "
         
         # Check 3
-        if Universities.findUniversityLink(user.research_data['institution']).find(link) > -1:
+        if Universities.findUniversityLink(user.research_data['institution']) != -1:
             checks += 1
             reason += "University website verified"
         add_prompt: str = f"The researcher: {user_name} | Institution: {institution}"
@@ -111,9 +110,14 @@ class WebScraping:
     then check verify the source is reputable by a 3 part check method
     '''
     def scrape_webpage(self, link: str, user: User, checks):
+        print("PAGE SCRAPED:",link)
         # Request the page and convert to BS4
-        req = self.request(link)
-        bs = BeautifulSoup(req.content, 'html.parser')
+        try:
+            req = self.request(link)
+            bs = BeautifulSoup(req.content, 'html.parser')
+        except Exception as ex:
+            print(f"${link} could not be scraped.\nError: {ex.with_traceback}")
+            return
         
         # Grab only the webtext (text without HTML tags)
         webtext = bs.get_text().replace('\n', '').replace('"', '').strip()
@@ -170,20 +174,15 @@ class WebScraping:
     Scrape all the webpages from the user
     and implement into their research_data field
     '''
-    def scrape_researcher(self, user: User, checks = 2):
-        thread_list : list[Thread] = []
-        for page in user.initial_search_links:
-            print("[New Scrape]")
-            
-            # Start threading
-            thread = Thread(target=self.scrape_webpage, args=(page, user, checks))
-            thread_list.append(thread)
-            thread.start()
-
-        # Wait for all threads to finish
-        for thread in thread_list:
-            thread.join()
+    async def scrape_researcher(self, user: User, checks = 2):
+        print("Scraping researcher method")
+        tasks = [
+        asyncio.to_thread(self.scrape_webpage, page, user, checks)
+        for page in user.initial_search_links
+        ]
+        await asyncio.gather(*tasks)
         self.remove_similar_values(user.research_data)
+
 
     '''
     Check if names are similar in case of shortened names
