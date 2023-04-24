@@ -13,9 +13,11 @@ class WebScraping:
     def __init__(self):
         self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
         self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors",
-                                   "coursicle", "youtube", ".gov"]
+                                   "coursicle", "youtube", ".gov", "amazon"]
         bs4 = BeautifulSoup()
         self.GPT = GPT()
+
+        self.pages_to_scan = 1
 
     '''
     The initial search perform a google search on the user using the query "{FIRST LAST} {INSTITUTION}"
@@ -51,7 +53,8 @@ class WebScraping:
         user_name = "+".join(user.research_data['name']) + f" {user.research_data['institution']}"
         links = []
 
-        for page_number in range(3):
+        # Scan only the first page
+        for page_number in range(self.pages_to_scan):
             start_index = page_number * 10
             search_url = f"https://www.google.com/search?q={user_name}&start={start_index}"
 
@@ -70,8 +73,7 @@ class WebScraping:
             # Only grab the relevent part of the link if it includes more in it
             links += [link.split("/url?q=")[-1].split("&sa")[0] for link in filtered_links]
 
-        user.initial_search_links = links
-        # links = list(set(links))
+        user.initial_search_links = list(set(links))
         return links
     
     '''

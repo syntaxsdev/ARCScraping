@@ -45,13 +45,12 @@ class User:
             
 
             
-    def is_content_similar(self, name1, name2, threshold=80):
+    def is_content_similar(self, name1, name2, threshold=85):
         similarity = fuzz.token_set_ratio(name1, name2)
         return similarity >= threshold
 
-    def deduplicate(self, names, threshold=85):
-        unique_names = []
-        for name in names:
-            if not any(self.is_content_similar(name, unique_name, threshold) for unique_name in unique_names):
-                unique_names.append(name)
-        return unique_names
+    def deduplicate(self, threshold=85):
+        for val in self.research_data:
+            unique = []
+            if not any(self.is_content_similar(val, unique_name, threshold) for unique_name in unique_names):
+                unique.append(val)

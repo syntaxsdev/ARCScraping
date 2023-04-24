@@ -21,3 +21,8 @@ On Windows, in the VS Cdoe terminal:
 ```ps
 env/Scripts/activate
 ```
+
+### To run the file (GUI)
+```py
+python interface.py
+```
