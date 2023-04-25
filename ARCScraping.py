@@ -34,6 +34,8 @@ class ARCScraping:
         self.ws.initial_search(researcher)
         print(f"Researcher [{researcher.research_data['name']}] done with initial search.")
         # Scrape entire researcher from top-down
+
+        print("Ini Links", researcher.initial_search_links)
         await self.ws.scrape_researcher(researcher)
         print(f"Researcher [{researcher.research_data['name']}] done with scraping..")
 
@@ -80,7 +82,7 @@ class ARCScraping:
         '''
         for researcher in self.researchers_scraped:
             await self.full_scrape(researcher)
-            researcher.deduplicate()
+            #researcher.deduplicate()
         print("Done running all researchers")
         
         self.export()

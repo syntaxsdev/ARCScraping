@@ -1,4 +1,4 @@
-import requests, random, Universities, re, difflib, asyncio
+import requests, random, Universities, re, difflib, asyncio, time
 from GPT import GPT
 from urllib.parse import urlparse
 from UserAgents import UserAgents
@@ -90,7 +90,7 @@ class WebScraping:
 
         # Check 1
         institution: str = user.research_data['institution']
-        if page_data.find(institution.lower()) > -1:
+        if self.is_name_in_text(institution, page_data):
             checks += 1
             reason += "Institution found | "
 
@@ -100,9 +100,15 @@ class WebScraping:
             reason += "Researcher name found | "
         
         # Check 3
-        if Universities.findUniversityLink(user.research_data['institution']) != -1:
+        if (Universities.findUniversityLink(institution) != -1 or 
+            Universities.findTLD(link) != -1):
             checks += 1
             reason += "University website verified"
+        
+        '''
+        Add additional data to the prompt. We do this, so that the prompt is 
+        more accurate in determining who it is scraping for
+        '''
         add_prompt: str = f"The researcher: {user_name} | Institution: {institution}"
 
         return (checks >= 2, checks, reason, add_prompt)
@@ -112,7 +118,7 @@ class WebScraping:
     then check verify the source is reputable by a 3 part check method
     '''
     def scrape_webpage(self, link: str, user: User, checks):
-        print("PAGE SCRAPED:",link)
+        #print("PAGE SCRAPED:",link)
         # Request the page and convert to BS4
         try:
             req = self.request(link)
@@ -132,12 +138,16 @@ class WebScraping:
         # Do a 3 part check on the domain, webtext, and the user to verify it pertains to the user
         verified, check, reason, prompt = self.verify_link_relevancy(domain, webtext, user)
 
+        print(user.research_data['name'], reason, link)
         if check >= checks and verified:
+            print("Verified,",link)
+            # Scrape the JSON returned by GPT's model of the webtext
             json_data = self.GPT.scrape(webtext, prompt)
+            #print(json_data)
             for json in json_data:
                 for key, value in json.items():
                     v_data = str(value)
-                    if (key == "name"):
+                    if (key == "name") or (key == "institution"):
                         continue
                     if (type(value)==list):
                         user.research_data[key].extend(value)
@@ -177,14 +187,15 @@ class WebScraping:
     and implement into their research_data field
     '''
     async def scrape_researcher(self, user: User, checks = 2):
-        print("Scraping researcher method")
+        print("[In Scraping researcher method]")
         tasks = [
         asyncio.to_thread(self.scrape_webpage, page, user, checks)
         for page in user.initial_search_links
         ]
+ #       ini_time = time.time()
         await asyncio.gather(*tasks)
+#        print(f"TIME: {(time.time() - ini_time):.1f} | [RESEARCH DATA]", user.research_data)
         self.remove_similar_values(user.research_data)
-        print(user.research_data)
 
 
     '''
@@ -214,15 +225,18 @@ class WebScraping:
             if fuzz.token_set_ratio(name, extracted_name) >= threshold:
                 return True
         return False
-
-
+    
     '''
     Internal request method that faciliates parameters and headers
     :return: `Response`
-    '''
+    '''      
     def request(self, link) -> requests.Response:
-        return requests.get(link, self.genHeaders())
-
+        r = requests.get(link, self.genHeaders())
+        if (r.status_code == 418):
+            session = requests.Session()
+            r = session.get(link, headers=self.genHeaders())
+        return r
+    
     '''
     Generate new headers
     '''
