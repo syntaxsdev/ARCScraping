@@ -94,7 +94,7 @@ class WebScraperGUI(QWidget):
         while (self.process_button.isEnabled() == False):
             time.sleep(1)
             self.stat3.setText(f"Running Time: {(time.time() - self.start_time):.0f} secs")
-        self.stat3.setText(f"Complete Time: {(time.time() - self.start_time):.0f)} secs")
+        self.stat3.setText(f"Completed Time: {(time.time() - self.start_time):.0f} secs")
         
 
 if __name__ == '__main__':

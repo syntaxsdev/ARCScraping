@@ -118,7 +118,7 @@ class WebScraping:
             req = self.request(link)
             bs = BeautifulSoup(req.content, 'html.parser')
         except Exception as ex:
-            print(f"${link} could not be scraped.\nError: {ex.with_traceback}")
+            print(f"{link} could not be scraped.\nError: {ex.with_traceback}")
             return
         
         # Grab only the webtext (text without HTML tags)
@@ -184,6 +184,7 @@ class WebScraping:
         ]
         await asyncio.gather(*tasks)
         self.remove_similar_values(user.research_data)
+        print(user.research_data)
 
 
     '''

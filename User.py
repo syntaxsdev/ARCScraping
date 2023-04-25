@@ -43,14 +43,19 @@ class User:
                     newlist.append(aw)
         return newlist
             
-
-            
     def is_content_similar(self, name1, name2, threshold=85):
         similarity = fuzz.token_set_ratio(name1, name2)
         return similarity >= threshold
 
     def deduplicate(self, threshold=85):
-        for val in self.research_data:
-            unique = []
-            if not any(self.is_content_similar(val, unique_name, threshold) for unique_name in unique_names):
-                unique.append(val)
+        fields = self.research_data
+        deduplicated_fields = {}
+
+        for key, values in fields.items():
+            unique_vals = []
+            for value in values:
+                if not any(self.is_content_similar(value, unique_val, threshold) for unique_val in unique_vals):
+                    unique_vals.append(value)
+            deduplicated_fields[key] = unique_vals
+            
+        self.research_data = deduplicated_fields

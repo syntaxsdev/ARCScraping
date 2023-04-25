@@ -80,7 +80,7 @@ class ARCScraping:
         '''
         for researcher in self.researchers_scraped:
             await self.full_scrape(researcher)
-            #researcher.deduplicate()
+            researcher.deduplicate()
         print("Done running all researchers")
         
         self.export()
