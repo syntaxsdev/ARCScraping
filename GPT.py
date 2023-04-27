@@ -1,4 +1,5 @@
 import openai, json, os, pandas as pd, tiktoken
+from tenacity import retry, stop_after_attempt, wait_exponential
 from dotenv import load_dotenv
 
 class GPT:
@@ -15,14 +16,20 @@ class GPT:
                     {"role": "user", "content": text}]
         return messages
 
-
+    @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=15))
     def runModel(self, msg_history: list, temp: int = 0):
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=msg_history,
-            temperature=temp
-        )
-        return response
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=msg_history,
+                temperature=temp
+            )
+            return response
+        except Exception as e:
+            print(f"Failed running model. Retrying... {e.with_traceback()}")
+            #print(msg_history[-1])
+            self.connectOpenAI()
+            raise
 
     def scrape(self, webtext: str, add_prompt: str):
         self.connectOpenAI()
@@ -31,7 +38,10 @@ class GPT:
         msg_list = self.truncate_message_parts(msg)
 
         for msg_part in msg_list:
-            data = self.runModel(msg_history=msg_part)
+            try:
+                data = self.runModel(msg_history=msg_part)
+            except:
+                return json_data
 
             try:
                 json_data.append(json.loads(data.choices[0].message.content))

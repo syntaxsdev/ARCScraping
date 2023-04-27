@@ -13,7 +13,7 @@ class WebScraping:
     def __init__(self):
         self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
         self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors",
-                                   "coursicle", "youtube", ".gov", "amazon"]
+                                   "coursicle", "youtube", ".gov", "amazon", "researchgate"]
         bs4 = BeautifulSoup()
         self.GPT = GPT()
 
@@ -118,7 +118,7 @@ class WebScraping:
     then check verify the source is reputable by a 3 part check method
     '''
     def scrape_webpage(self, link: str, user: User, checks):
-        #print("PAGE SCRAPED:",link)
+        print("PAGE SCRAPING:" + link)
         # Request the page and convert to BS4
         try:
             req = self.request(link)
@@ -128,7 +128,7 @@ class WebScraping:
             return
         
         # Grab only the webtext (text without HTML tags)
-        webtext = bs.get_text().replace('\n', '').replace('"', '').strip()
+        webtext = bs.get_text().replace('\n', '').replace('"', '').replace("\xa0", '').strip()
         
         # Parse the URL so that we can only get the base domain
         parsed_url = urlparse(link)
@@ -138,17 +138,14 @@ class WebScraping:
         # Do a 3 part check on the domain, webtext, and the user to verify it pertains to the user
         verified, check, reason, prompt = self.verify_link_relevancy(domain, webtext, user)
 
-        print(user.research_data['name'], reason, link)
         if check >= checks and verified:
-            print("Verified,",link)
             # Scrape the JSON returned by GPT's model of the webtext
             json_data = self.GPT.scrape(webtext, prompt)
-            #print(json_data)
             for json in json_data:
                 for key, value in json.items():
                     v_data = str(value)
-                    if (key == "name") or (key == "institution"):
-                        continue
+                    if (key not in user.research_data.keys()) or (key == "name") or (key == "institution"):
+                        continue 
                     if (type(value)==list):
                         user.research_data[key].extend(value)
                     else:
@@ -158,7 +155,7 @@ class WebScraping:
                             user.research_data[key].append(value)
                         else:
                             user.research_data[key] = value
-
+        print(f"FINISHED SCRAPING: {link}")
     '''
     Removes similar values in the scraped
     data and keeps only unique ones
@@ -187,14 +184,11 @@ class WebScraping:
     and implement into their research_data field
     '''
     async def scrape_researcher(self, user: User, checks = 2):
-        print("[In Scraping researcher method]")
         tasks = [
         asyncio.to_thread(self.scrape_webpage, page, user, checks)
         for page in user.initial_search_links
         ]
- #       ini_time = time.time()
         await asyncio.gather(*tasks)
-#        print(f"TIME: {(time.time() - ini_time):.1f} | [RESEARCH DATA]", user.research_data)
         self.remove_similar_values(user.research_data)
 
 
