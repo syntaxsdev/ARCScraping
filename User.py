@@ -42,11 +42,17 @@ class User:
                 if aw != "N/A": 
                     newlist.append(aw)
         return newlist
-            
+
+    '''
+    Returns if content is similar based on threshold
+    '''       
     def is_content_similar(self, name1, name2, threshold=85):
         similarity = fuzz.token_set_ratio(name1, name2)
         return similarity >= threshold
 
+    '''
+    Removes duplicate data
+    '''
     def deduplicate(self, threshold=85):
         fields = self.research_data
         deduplicated_fields = {}

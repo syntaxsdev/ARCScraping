@@ -13,7 +13,7 @@ class WebScraping:
     def __init__(self):
         self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
         self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors",
-                                   "coursicle", "youtube", ".gov", "amazon", "researchgate"]
+                                   "coursicle", "youtube", ".gov", "amazon", "researchgate", ".doc", ".pdf"]
         bs4 = BeautifulSoup()
         self.GPT = GPT()
 
@@ -50,13 +50,14 @@ class WebScraping:
         # return links
 
 
-        user_name = "+".join(user.research_data['name']) + f" {user.research_data['institution']}"
+        #user_name = "+" + " +".join(user.research_data['name']) + f" {user.research_data['institution']}"
+        query = '"' + " ".join(user.research_data['name']) + '"' + f" {user.research_data['institution']}"
         links = []
 
         # Scan only the first page
         for page_number in range(self.pages_to_scan):
             start_index = page_number * 10
-            search_url = f"https://www.google.com/search?q={user_name}&start={start_index}"
+            search_url = f"https://www.google.com/search?q={query}&start={start_index}"
 
             req = self.request(search_url)
             bs = BeautifulSoup(req.content, 'html.parser')
@@ -118,7 +119,6 @@ class WebScraping:
     then check verify the source is reputable by a 3 part check method
     '''
     def scrape_webpage(self, link: str, user: User, checks):
-        print("PAGE SCRAPING:" + link)
         # Request the page and convert to BS4
         try:
             req = self.request(link)
@@ -155,7 +155,6 @@ class WebScraping:
                             user.research_data[key].append(value)
                         else:
                             user.research_data[key] = value
-        print(f"FINISHED SCRAPING: {link}")
     '''
     Removes similar values in the scraped
     data and keeps only unique ones

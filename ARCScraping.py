@@ -59,7 +59,7 @@ class ARCScraping:
                 dedict: list = researcher.dedictionaryify(val)
                 dedict_to_str: str = '\n'.join(dedict)
                     
-                researcher_export_data[key] = dedict_to_str
+                researcher_export_data[key] = dedict_to_str.replace("N/A", "")
             researchers_list.append(researcher_export_data)
 
 

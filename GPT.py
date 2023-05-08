@@ -16,7 +16,7 @@ class GPT:
                     {"role": "user", "content": text}]
         return messages
 
-    @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=15))
+    @retry(stop=stop_after_attempt(2), wait=wait_exponential(multiplier=1, min=4, max=15))
     def runModel(self, msg_history: list, temp: int = 0):
         try:
             response = openai.ChatCompletion.create(
