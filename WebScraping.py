@@ -11,7 +11,7 @@ from threading import Thread
 class WebScraping:
     bs4 = None
     def __init__(self):
-        self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search"]
+        self.linkFilterPrefixes = ["/search", "q=", "/?", "/advanced_search", "/imgres"]
         self.linkFilterSearches = ["google", "facebook", "instagram", "linkedin", "twitter", "ratemyprofessors",
                                    "coursicle", "youtube", ".gov", "amazon", "researchgate", ".doc", ".pdf"]
         bs4 = BeautifulSoup()
@@ -137,10 +137,11 @@ class WebScraping:
 
         # Do a 3 part check on the domain, webtext, and the user to verify it pertains to the user
         verified, check, reason, prompt = self.verify_link_relevancy(domain, webtext, user)
-
+        #print(link, "--> Data verified: ", verified)
         if check >= checks and verified:
             # Scrape the JSON returned by GPT's model of the webtext
             json_data = self.GPT.scrape(webtext, prompt)
+            #print(json_data)
             for json in json_data:
                 for key, value in json.items():
                     v_data = str(value)

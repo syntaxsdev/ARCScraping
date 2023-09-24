@@ -1,0 +1,25 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+absl-py = "==1.4.0"
+aiofiles = "==0.8.0"
+asyncio = "*"
+pandas = "*"
+openai = "*"
+python-dotenv = "*"
+tiktoken = "*"
+tenacity = "*"
+fuzzywuzzy = "*"
+bs4 = "*"
+python-levenshtein = "*"
+pyqt5 = "*"
+openpyxl = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
+python_full_version = "3.9.6"

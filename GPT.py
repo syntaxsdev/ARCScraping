@@ -18,15 +18,18 @@ class GPT:
 
     @retry(stop=stop_after_attempt(2), wait=wait_exponential(multiplier=1, min=4, max=15))
     def runModel(self, msg_history: list, temp: int = 0):
+        print("\033[93mExtracting the data using the GPT model... \033[0m")
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=msg_history,
                 temperature=temp
             )
+            print("\033[92mDone extracting!\033[0m")
+
             return response
         except Exception as e:
-            print(f"Failed running model. Retrying... {e.with_traceback()}")
+            print(f"Failed!\nFailed running model. Retrying... {e.with_traceback()}")
             #print(msg_history[-1])
             self.connectOpenAI()
             raise
